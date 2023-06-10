@@ -47,7 +47,6 @@
 <script>
 import { defineComponent, ref, computed } from 'vue'
 import { useStore } from 'vuex'
-import { music } from '../store/music/module'
 
 export default defineComponent({
   setup(_) {
