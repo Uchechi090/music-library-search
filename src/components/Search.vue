@@ -7,19 +7,47 @@
       <input
         type="text"
         v-model="searchTerm"
+        @input="handleChange()"
         @keyup="searchLibrary()"
+        @keyup.enter="searchLibrary()"
         class="search-input"
         name="search"
       />
       <span :class="isLoading ? 'spinner' : 'spinner--hidden'"></span>
-      <!-- <span class="spinner"></span> -->
+    </div>
+    <div
+      class="suggestions"
+      v-if="artistMatches.length || songMatches.length || albumMatches.length"
+    >
+      <div class="types">
+        <span class="type">ARTIST</span>
+        <span class="list" v-for="item in artistMatches" @click="setSearchTerm(item.artistName)">{{
+          item.artistName
+        }}</span>
+      </div>
+      <div class="types">
+        <span class="type">SONG</span>
+        <span class="list" v-for="item in songMatches" @click="setSearchTerm(item.trackName)">{{
+          item.trackName
+        }}</span>
+      </div>
+      <div class="types">
+        <span class="type">ALBUM</span>
+        <span
+          class="list"
+          v-for="item in albumMatches"
+          @click="setSearchTerm(item.collectionName)"
+          >{{ item.collectionName }}</span
+        >
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, computed } from 'vue'
 import { useStore } from 'vuex'
+import { music } from '../store/music/module'
 
 export default defineComponent({
   setup(_) {
@@ -28,6 +56,40 @@ export default defineComponent({
     const searchTerm = ref('')
     const isLoading = ref(false)
     const errors = ref('')
+
+    const music = computed(() => store.getters['music/listOfMusic'])
+
+    const artistMatches = ref([])
+    const albumMatches = ref([])
+    const songMatches = ref([])
+
+    const setSearchTerm = (text) => {
+      searchTerm.value = text
+    }
+
+    const handleChange = () => {
+      if (searchTerm.value.length > 0) {
+        artistMatches.value = music.value
+          .filter((item) => {
+            const regex = new RegExp(`${searchTerm}`, 'gi')
+            console.log(item.artistName.match(regex))
+            return item.artistName.match(regex)
+          })
+          .slice(0, 3)
+        albumMatches.value = music.value
+          .filter((item) => {
+            const regex = new RegExp(`${searchTerm}`, 'gi')
+            return item.collectionName.match(regex)
+          })
+          .slice(0, 3)
+        songMatches.value = music.value
+          .filter((item) => {
+            const regex = new RegExp(`${searchTerm}`, 'gi')
+            return item.trackName.match(regex)
+          })
+          .slice(0, 3)
+      }
+    }
 
     const searchLibrary = async () => {
       try {
@@ -44,6 +106,11 @@ export default defineComponent({
     return {
       searchTerm,
       isLoading,
+      artistMatches,
+      albumMatches,
+      songMatches,
+      setSearchTerm,
+      handleChange,
       searchLibrary
     }
   }
@@ -99,6 +166,32 @@ export default defineComponent({
     }
     to {
       transform: rotate(1turn);
+    }
+  }
+}
+
+.suggestions {
+  margin: 0 auto;
+  width: 700px;
+  border: none;
+  font-size: 14px;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+  .types {
+    display: flex;
+    flex-direction: column;
+
+    .type {
+      color: #808080;
+      font-size: smaller;
+      padding-left: 3px;
+    }
+
+    .list {
+      padding-left: 6px;
+      cursor: pointer;
+    }
+    .list:hover {
+      background-color: #e9f1fb;
     }
   }
 }
